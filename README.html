@@ -1,0 +1,126 @@
+<doctype html>
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/3.0.1/github-markdown.min.css">
+<style>
+	.markdown-body {
+		box-sizing: border-box;
+		min-width: 200px;
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 45px;
+	}
+
+	@media (max-width: 767px) {
+		.markdown-body {
+			padding: 15px;
+		}
+	}
+</style>
+</head>
+<body class="markdown-body">
+<h1>Light Index Dedupe</h1>
+
+<p><a href="http://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a> <img src="https://img.shields.io/badge/Script%20Tested%20in%20Nuix-7.8-green.svg" alt="This script was last tested in Nuix 7.8"></p>
+
+<p>View the GitHub project <a href="https://github.com/Nuix/Light-Index-Dedupe">here</a> or download the latest release <a href="https://github.com/Nuix/Light-Index-Dedupe/releases">here</a>.</p>
+
+<h1>Overview</h1>
+
+<p><strong>Written By:</strong> Jason Wells</p>
+
+<p>Creates item sets in instances where a &quot;light index&quot; ingestion was performed and items in a case may not have MD5, SHA1 or SHA256 hashes to deduplicate with.  The script accomplishes this by using a concatenation of data which is available (such as file size and last modified date).  An MD5 is generated from the concatenated values, which is then used for deduplication while adding items to the item set.  This has the downside that deduplication is not necessarily as accurate, but can provide a &quot;big picture&quot; rough idea of how duplicative data on a file system may be.</p>
+
+<h1>Getting Started</h1>
+
+<h2>Setup</h2>
+
+<p>Begin by downloading the latest release of this code.  Extract the contents of the archive into your Nuix scripts directory.  In Windows the script directory is likely going to be either of the following:</p>
+
+<ul>
+<li><code>%appdata%\Nuix\Scripts</code> - User level script directory</li>
+<li><code>%programdata%\Nuix\Scripts</code> - System level script directory</li>
+</ul>
+
+<h2>Usage</h2>
+
+<p>Begin by selecting some items, then run the script.  A settings dialog will be displayed with the following settings:</p>
+
+<table><thead>
+<tr>
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Item Set Name</strong></td>
+<td>Name of the item set to add the custom deduplicated items to.  If an item set with the given name exists, the items will be added to it.  If an item set with the given name does not already exist, one will be created.</td>
+</tr>
+<tr>
+<td><strong>Batch Name</strong></td>
+<td>Name of the item set batch to add custom deduplicated items to.</td>
+</tr>
+<tr>
+<td><strong>Use Name</strong></td>
+<td>Whether item name should be included in the concatenated string from which the deduplication MD5 will be derived.</td>
+</tr>
+<tr>
+<td><strong>Use &#39;File Size&#39;</strong></td>
+<td>Whether item file size should be included in the concatenated string from which the deduplication MD5 will be derived.</td>
+</tr>
+<tr>
+<td><strong>Use &#39;File Modified&#39;</strong></td>
+<td>Whether item file modified time should be included in the concatenated string from which the deduplication MD5 will be dervied.</td>
+</tr>
+<tr>
+<td><strong>Accuracy to Millisecond</strong></td>
+<td>Determines the format string used to convert &#39;File Modified&#39; to a string.  This choice includes the time down to the fraction of a second.  For this choice the format string used is:<br> <code>yyyy/MM/dd HH:mm:ss.SSS</code>.</td>
+</tr>
+<tr>
+<td><strong>Accuracy to Second</strong></td>
+<td>Determines the format string used to convert &#39;File Modified&#39; to a string.  This choice includes the time down to the whole second.  Can be useful if you expect different instances of the same data to have slightly differing sub-second &#39;File Modified&#39; values.  For this choice the format string used is:<br> <code>yyyy/MM/dd HH:mm:ss</code>.</td>
+</tr>
+<tr>
+<td><strong>Accuracy to Minute</strong></td>
+<td>Determines the format string used to convert &#39;File Modified&#39; to a string.  This choice includes the time down to the whole minute.  Can be useful if you expect different instances of the same data to have slightly differing values in seconds.  Likely not that useful, but added in case there is value in this for someone.  For this choice the format string used is:<br> <code>yyyy/MM/dd HH:mm</code>.</td>
+</tr>
+<tr>
+<td><strong>Use Content Text</strong></td>
+<td>Whether to include item content text in the concatenated string from which the deduplication MD5 will be derived. The script uses a copy of the item content text with all whitespace removed when this option is checked, to account for instances where whitespace characters may vary due to differing source formats for otherwise duplicative data.  Whitespace removal is mostly for instances where same email may have been stored in different formats which may yield slight variations in whitespace for an otherwise duplicative email.</td>
+</tr>
+<tr>
+<td><strong>Dedupe by Family</strong></td>
+<td>When checked, deduplication MD5 will be generated for a given item from that item&#39;s top level item.  If the item is above top level, and therfore has not top level item, the deduplication MD5 will be generated from the item itself.  If this is not checked, deduplication Md5 will be generated from each given input item rather than its corresponding top level item.</td>
+</tr>
+<tr>
+<td><strong>Pull in Family Members of Selected Items</strong></td>
+<td>When checked, the script will take the items selected when the script was ran and include all their family members.  When not checked, only the item you had selected when you ran the script will be added to the item set the script creates.</td>
+</tr>
+</tbody></table>
+
+<h1>Cloning this Repository</h1>
+
+<p>This script relies on code from <a href="https://github.com/Nuix/Nx">Nx</a> to present a settings dialog and progress dialog.  This JAR file is not included in the repository (although it is included in release downloads).  If you clone this repository, you will also want to obtain a copy of Nx.jar by either:<br>
+1. Building it from <a href="https://github.com/Nuix/Nx">the source</a><br>
+2. Downloading an already built JAR file from the <a href="https://github.com/Nuix/Nx/releases">Nx releases</a></p>
+
+<p>Once you have a copy of Nx.jar, make sure to include it in the same directory as the script.</p>
+
+<h1>License</h1>
+
+<pre><code>Copyright 2019 Nuix
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</code></pre>
+</body>
+</html>
