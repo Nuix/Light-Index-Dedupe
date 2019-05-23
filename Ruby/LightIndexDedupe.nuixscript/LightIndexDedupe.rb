@@ -27,19 +27,26 @@ main_tab.appendTextField("batch_name","Batch Name","")
 main_tab.appendHeader("Deduplication comparison values:")
 main_tab.appendCheckBox("include_name","Use Name",true)
 main_tab.appendCheckBox("include_file_size","Use 'File Size'",true)
-main_tab.appendCheckBox("include_file_modified","Use 'File Modified'",true)
-main_tab.appendRadioButton("accuracy_millisecond","Accuracy to Millisecond (yyyy/MM/dd HH:mm:ss.SSS)","date_accuracy",true)
-main_tab.appendRadioButton("accuracy_second","Accuracy to Second (yyyy/MM/dd HH:mm:ss)","date_accuracy",false)
-main_tab.appendRadioButton("accuracy_minute","Accuracy to Minute (yyyy/MM/dd HH:mm)","date_accuracy",false)
-main_tab.enabledOnlyWhenChecked("accuracy_millisecond","include_file_modified")
-main_tab.enabledOnlyWhenChecked("accuracy_second","include_file_modified")
-main_tab.enabledOnlyWhenChecked("accuracy_minute","include_file_modified")
+main_tab.appendCheckBox("include_file_modified","Use 'File Modified' Date",true)
+main_tab.appendCheckBox("include_item_date","Use Item Date",true)
 main_tab.appendCheckBox("include_content_text","Use Content Text",false)
+
+main_tab.appendHeader("Date Accuracy")
+main_tab.appendRadioButton("accuracy_millisecond","Date Accuracy to Millisecond (yyyy/MM/dd HH:mm:ss.SSS)","date_accuracy",true)
+main_tab.appendRadioButton("accuracy_second","Date Accuracy to Second (yyyy/MM/dd HH:mm:ss)","date_accuracy",false)
+main_tab.appendRadioButton("accuracy_minute","Date Accuracy to Minute (yyyy/MM/dd HH:mm)","date_accuracy",false)
+
+main_tab.appendHeader("Item Settings")
 main_tab.appendCheckBox("by_family","Dedupe By Family",true)
 main_tab.appendCheckBox("pull_in_families","Pull in Family Members of Selected Items",true)
 
+annotations_tab = dialog.addTab("annotations_tab","Annotations")
+annotations_tab.appendCheckableTextField("record_digest_input",false,"digest_input_field","LightIndexDedupeInput","Record concatenated input value as")
+annotations_tab.appendCheckableTextField("record_digest",false,"digest_field","LightIndexDedupeMD5","Record deduplication MD5 as")
+
 dialog.validateBeforeClosing do |values|
-	if !values["include_name"] && !values["include_file_size"] && !values["include_file_modified"] && !values["include_content_text"]
+	if !values["include_name"] && !values["include_file_size"] && !values["include_file_modified"] && !values["include_content_text"] &&
+		!values["include_item_date"]
 		CommonDialogs.showWarning("Please select at least one value to use for deduplication comparison.")
 		next false
 	end
@@ -75,6 +82,16 @@ dialog.validateBeforeClosing do |values|
 		end
 	end
 
+	if values["record_digest_input"] && values["digest_input_field"].strip.empty?
+		CommonDialogs.showWarning("Please provide a field name for recording digest input value.")
+		next false
+	end
+
+	if values["record_digest"] && values["digest_field"].strip.empty?
+		CommonDialogs.showWarning("Please provide a field name for recording digest value.")
+		next false
+	end
+
 	next true
 end
 
@@ -87,15 +104,24 @@ if dialog.getDialogResult == true
 	include_name = values["include_name"]
 	include_file_size = values["include_file_size"]
 	include_file_modified = values["include_file_modified"]
+	include_item_date = values["include_item_date"]
 	include_content_text = values["include_content_text"]
 
 	by_family = values["by_family"]
 	pull_in_families = values["pull_in_families"]
 
+	record_digest_input = values["record_digest_input"]
+	digest_input_field = values["digest_input_field"]
+	record_digest = values["record_digest"]
+	digest_field = values["digest_field"]
+
 	date_format = nil
 	date_format = "yyyyMMddHHmmssSSS" if values["accuracy_millisecond"]
 	date_format = "yyyyMMddHHmmss" if values["accuracy_second"]
 	date_format = "yyyyMMddHHmm" if values["accuracy_minute"]
+
+	java_import org.joda.time.DateTimeZone
+	investigation_time_zone = DateTimeZone.forID($current_case.getInvestigationTimeZone)
 
 	ProgressDialog.forBlock do |pd|
 		pd.setTitle("Light Index Dedupe")
@@ -149,12 +175,26 @@ if dialog.getDialogResult == true
 
 			if include_file_modified
 				modified_time = key_item.getProperties[modified_time_property_name]
+				# Make sure we are using investigator time zone
+				modified_time = modified_time.withZone(investigation_time_zone)
 	 			if modified_time.nil?
 	 				modified_time = ""
 	 			else
 	 				modified_time = modified_time.toString(date_format)
 	 			end
 	 			pieces << modified_time
+			end
+
+			if include_item_date
+				item_date = key_item.getDate
+				# Make sure we are using investigator time zone
+				item_date = item_date.withZone(investigation_time_zone)
+	 			if item_date.nil?
+	 				item_date = ""
+	 			else
+	 				item_date = item_date.toString(date_format)
+	 			end
+	 			pieces << item_date
 			end
 
 			if include_content_text
@@ -164,10 +204,22 @@ if dialog.getDialogResult == true
 			end
 	 		
 	 		result = pieces.join
+	 		cm = nil
+	 		if record_digest_input || record_digest
+		 		cm = item.getCustomMetadata
+		 		if record_digest_input
+		 			cm[digest_input_field] = result
+		 		end
+		 	end
+
 	 		if result.strip.empty?
 	 			next nil
 	 		else
-	 			next Digest::MD5.hexdigest(result)
+	 			md5 = Digest::MD5.hexdigest(result)
+	 			if record_digest
+	 				cm[digest_field] = md5
+	 			end
+	 			next md5
 	 		end
 		end
 

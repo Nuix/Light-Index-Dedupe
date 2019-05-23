@@ -24,19 +24,30 @@ Begin by downloading the latest release of this code.  Extract the contents of t
 
 Begin by selecting some items, then run the script.  A settings dialog will be displayed with the following settings:
 
+### Main Tab
+
 | Setting | Description |
 |---------|-------------|
 | **Item Set Name** | Name of the item set to add the custom deduplicated items to.  If an item set with the given name exists, the items will be added to it.  If an item set with the given name does not already exist, one will be created. |
 | **Batch Name** | Name of the item set batch to add custom deduplicated items to. |
 | **Use Name** | Whether item name should be included in the concatenated string from which the deduplication MD5 will be derived. |
 | **Use 'File Size'** | Whether item file size should be included in the concatenated string from which the deduplication MD5 will be derived. |
-| **Use 'File Modified'** | Whether item file modified time should be included in the concatenated string from which the deduplication MD5 will be dervied. |
-| **Accuracy to Millisecond** | Determines the format string used to convert 'File Modified' to a string.  This choice includes the time down to the fraction of a second.  For this choice the format string used is:<br> `yyyy/MM/dd HH:mm:ss.SSS`. |
-| **Accuracy to Second** | Determines the format string used to convert 'File Modified' to a string.  This choice includes the time down to the whole second.  Can be useful if you expect different instances of the same data to have slightly differing sub-second 'File Modified' values.  For this choice the format string used is:<br> `yyyy/MM/dd HH:mm:ss`. |
-| **Accuracy to Minute** | Determines the format string used to convert 'File Modified' to a string.  This choice includes the time down to the whole minute.  Can be useful if you expect different instances of the same data to have slightly differing values in seconds.  Likely not that useful, but added in case there is value in this for someone.  For this choice the format string used is:<br> `yyyy/MM/dd HH:mm`. |
+| **Use 'File Modified'** | Whether item file modified time should be included in the concatenated string from which the deduplication MD5 will be derived. |
+| **Use Item Date** | Whether item date should be included in the concatenated string from which the deduplication MD5 will be derived. |
 | **Use Content Text** | Whether to include item content text in the concatenated string from which the deduplication MD5 will be derived. The script uses a copy of the item content text with all whitespace removed when this option is checked, to account for instances where whitespace characters may vary due to differing source formats for otherwise duplicative data.  Whitespace removal is mostly for instances where the same email may have been stored in different formats which may yield slight variations in whitespace for otherwise duplicative emails. |
+| **Accuracy to Millisecond** | Determines the format string used to convert dates to a string.  This choice includes the time down to the fraction of a second.  For this choice the format string used is:<br> `yyyyMMddHHmmssSSS`. |
+| **Accuracy to Second** | Determines the format string used to convert dates to a string.  This choice includes the time down to the whole second.  Can be useful if you expect different instances of the same data to have slightly differing sub-second date values.  For this choice the format string used is:<br> `yyyyMMddHHmmss`. |
+| **Accuracy to Minute** | Determines the format string used to convert dates to a string.  This choice includes the time down to the whole minute.  Can be useful if you expect different instances of the same data to have slightly differing values in seconds.  For this choice the format string used is:<br> `yyyyMMddHHmm`. |
 | **Dedupe by Family** | When checked, deduplication MD5 will be generated for a given item from that item's top level item.  If the item is above top level, and therfore has no top level item, the deduplication MD5 will be generated from the item itself.  If this is not checked, deduplication Md5 will be generated from each given input item rather than its corresponding top level item. |
 | **Pull in Family Members of Selected Items** | When checked, the script will take the items selected when the script was ran and include all their family members.  When not checked, only the item you had selected when you ran the script will be added to the item set the script creates. |
+
+
+### Annotations Tab
+
+| Setting | Description |
+|---------|-------------|
+| **Record concatenated input value as** | When checked, the concatenated string from which the deduplication MD5 is generated will be recorded to the item in the specified custom metadata field.  Can be useful for troubleshooting if deduplication is not turning out as you expect it should.  Enabling this incurs performance penalties, so it is recommended you leave it unchecked unless you have a need for it.  Also note when **Use Content Text** is checked, this field can potentially have rather large values! |
+| **Record deduplication MD5 as** | When checked, the deduplication MD5 generated from the concatenated string will be recorded to the item in the specified custom metadata field.  Can be useful for troubleshooting if deduplication is not turning out as you expect it should.  Enabling this incurs performance penalties, so it is recommended you leave it unchecked unless you have a need for it. |
 
 # Cloning this Repository
 
